@@ -35,9 +35,6 @@ while True:
     if site == "detectportal.firefox.com":
 			objeto.shutdown(socket.SHUT_RD)
 			break
-
-		#print mensagem	
-		#arq_log.write('%s solicitou %s\n' %(IP,mensagem_sep[0]))
 		
 		#VERIFICACAO DE TERMOS NA WHITELIST
 		for whitesite in whitelist:
@@ -81,7 +78,6 @@ while True:
 		
 		while True:
 			mensagem_resposta=tcp.recv(4194304) #Servidor proxy recebe resposta do servidor http
-			#print mensagem_resposta
 			if not mensagem_resposta: #Encerra conexao quando nao houver mais mensagens do servidor http
 				tcp.close()
 				break 
@@ -128,14 +124,12 @@ while True:
 							data = time.strftime("%b, %d, %Y, %H:%M:%S")
 							texto_log = '%s - acesso em %s - termo proibido encontrado, acesso negado\n' %(site, data)
 							arqlog(texto_log)
-							print '\nTERMO PROIBIDO ENCONTRADO!\n'
 							break
 					if flag_dt!=-1:
 						objeto.send(str.encode('HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body>Acesso Negado - Termos proibidos - WASTED</body></html>\n'))
 						objeto.close()
 						break
 					
-					print '\nTERMO PROIBIDO NAO ENCONTRADO! \n'					
 					objeto.send(mensagem_resposta)
 				
 
@@ -150,7 +144,6 @@ while True:
 def despacha():
 	while True:
 		(objeto,cliente)=server.accept()
-		#print 'Conexao Estabelecida com %s' %cliente[0]
 		thread.start_new_thread(lidacliente,(objeto,))
 	
 def arqlog(site):
