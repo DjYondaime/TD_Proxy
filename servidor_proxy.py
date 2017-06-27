@@ -32,12 +32,13 @@ while True:
 		site=(mensagem_sep[1].split())[1]
 		
 	
-    if site == "detectportal.firefox.com": #Conexoes realizadas pelo firefox que nao importam para o programa
+    if site == "detectportal.firefox.com":
 			objeto.shutdown(socket.SHUT_RD)
 			break
 
 		#print mensagem	
-			
+		#arq_log.write('%s solicitou %s\n' %(IP,mensagem_sep[0]))
+		
 		#VERIFICACAO DE TERMOS NA WHITELIST
 		for whitesite in whitelist:
 			flag_wh=string.find(whitesite,site)
@@ -58,5 +59,23 @@ while True:
 					objeto.send(mensagem_resposta) #Envia resposta do servidor http para o browser caso ainda haja dados.
 				break #Sai do loop 'for' procurando sites na whitelist
 		if flag_wh!=-1:
-				break # Quebra loop lidacliente para encerrar conexao com o browser para tal requisicao
+			break # Quebra loop lidacliente para encerrar conexao com o browser para tal requisicao
+				
+		#VERIFICACAO DE SITES NA BLACKLIST
+		for blacksite in blacklist:
+			flag_bl=string.find(blacksite,site)
+			if flag_bl!=-1:
+				data = time.strftime("%b, %d, %Y, %H:%M:%S")
+				texto_log = '%s - acesso em %s - site na blacklist\n' %(site, data)
+				arqlog(texto_log)
+				objeto.send(str.encode('HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body>Acesso Negado - WASTED</body></html>\n')) #Envia mensagem de erro caso o site esteja na blacklist
+				break #Encerra loop 'for' procurando sites na blacklist
+		if flag_bl!=-1:
+				break #Quebra loop lidacliente para encerrar conexao com o browser para tal requisicao
+
+				
+def arqlog(site):
+	arq_log = open('arq_log.txt','a') #Abre o arquivo. Se o arquivo nao existir, cria
+	arq_log.writelines(site) #Imprime o site que foi tentado o acesso
+	arq_log.close() #Fecha o arquivo
 
