@@ -147,9 +147,15 @@ while True:
                 arqlog(texto_log)
 	objeto.close()
 
-				
+def despacha():
+	while True:
+		(objeto,cliente)=server.accept()
+		#print 'Conexao Estabelecida com %s' %cliente[0]
+		thread.start_new_thread(lidacliente,(objeto,))
+	
 def arqlog(site):
 	arq_log = open('arq_log.txt','a') #Abre o arquivo. Se o arquivo nao existir, cria
 	arq_log.writelines(site) #Imprime o site que foi tentado o acesso
 	arq_log.close() #Fecha o arquivo
 
+despacha()
