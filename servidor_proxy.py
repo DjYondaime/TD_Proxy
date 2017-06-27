@@ -87,7 +87,7 @@ while True:
 						
 			
  			try:
- 				if (tipo_http[0].find('HTTP/1.1'))!=-1: #Verifica se o pacote possui cabecalho
+ 				if (tipo_http[0].find('HTTP/1.'))!=-1: #Verifica se o pacote possui cabecalho
 	 				if int(tipo_http[1])>=200 and int(tipo_http[1])<300: #Verifica se e um pacote de confirmacao (HTTP 2XX)
 	 					content_type=mensagem_resposta.find('Content-Type: text/html') #Encontra campo content-type para verificar se e texto ou imagens
 	 					
