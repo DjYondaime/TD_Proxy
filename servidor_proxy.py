@@ -32,13 +32,12 @@ while True:
 		site=(mensagem_sep[1].split())[1]
 		
 	
-    if site == "detectportal.firefox.com":
+    if site == "detectportal.firefox.com": #Conexoes realizadas pelo firefox que nao importam para o programa
 			objeto.shutdown(socket.SHUT_RD)
 			break
 
 		#print mensagem	
-		#arq_log.write('%s solicitou %s\n' %(IP,mensagem_sep[0]))
-		
+			
 		#VERIFICACAO DE TERMOS NA WHITELIST
 		for whitesite in whitelist:
 			flag_wh=string.find(whitesite,site)
@@ -52,10 +51,8 @@ while True:
 				tcp.sendall(mensagem) #Servidor envia requisicao do browser
 				while True:
 					mensagem_resposta=tcp.recv(4194304) #Servidor proxy recebe resposta do servidor http
-					#page=page+mensagem_resposta
 					print mensagem_resposta
 					if not mensagem_resposta: 
-						#cache_unit.set(site,page,expiracao) #PEGAR CARACTERISTICAS CACHE
 						tcp.close() #Conexao com servidor http encerrada
 						break 
 					objeto.send(mensagem_resposta) #Envia resposta do servidor http para o browser caso ainda haja dados.
