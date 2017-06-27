@@ -21,5 +21,45 @@ server.listen(5)
 
 print 'Listening on %s %s' %(IP,PORTA_SRC)
 
+while True:
+		flag_wh=0
+		flag_bl=0
+		flag_dt=0
 
+		mensagem=objeto.recv(1024)
+		if not mensagem: break 
+		mensagem_sep=mensagem.split('\n')
+		site=(mensagem_sep[1].split())[1]
+		
+	
+    if site == "detectportal.firefox.com":
+			objeto.shutdown(socket.SHUT_RD)
+			break
+
+		#print mensagem	
+		#arq_log.write('%s solicitou %s\n' %(IP,mensagem_sep[0]))
+		
+		#VERIFICACAO DE TERMOS NA WHITELIST
+		for whitesite in whitelist:
+			flag_wh=string.find(whitesite,site)
+			if flag_wh != -1:
+			        data = time.strftime("%b, %d, %Y, %H:%M:%S")
+				texto_log = '%s - acesso em %s - site na whitelist\n' %(site, data)
+				arqlog(texto_log)
+				enderecoIP_site=socket.gethostbyname(site) #Captura endereco IP do servidor http	
+				tcp = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #Cria socket para conexao TCP	
+				tcp.connect((enderecoIP_site,80)) #Servidor proxy conecta ao servidor http
+				tcp.sendall(mensagem) #Servidor envia requisicao do browser
+				while True:
+					mensagem_resposta=tcp.recv(4194304) #Servidor proxy recebe resposta do servidor http
+					#page=page+mensagem_resposta
+					print mensagem_resposta
+					if not mensagem_resposta: 
+						#cache_unit.set(site,page,expiracao) #PEGAR CARACTERISTICAS CACHE
+						tcp.close() #Conexao com servidor http encerrada
+						break 
+					objeto.send(mensagem_resposta) #Envia resposta do servidor http para o browser caso ainda haja dados.
+				break #Sai do loop 'for' procurando sites na whitelist
+		if flag_wh!=-1:
+				break # Quebra loop lidacliente para encerrar conexao com o browser para tal requisicao
 
