@@ -72,6 +72,80 @@ while True:
 				break #Encerra loop 'for' procurando sites na blacklist
 		if flag_bl!=-1:
 				break #Quebra loop lidacliente para encerrar conexao com o browser para tal requisicao
+				
+		#VERIFICACAO DE TERMOS PROIBIDOS
+		enderecoIP_site=socket.gethostbyname(site) #Captura endereco IP do servidor http	
+		tcp = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #Cria socket para conexao TCP	
+		tcp.connect((enderecoIP_site,80)) #Servidor proxy conecta ao servidor http
+		tcp.sendall(mensagem) #Servidor envia requisicao do browser
+		
+		while True:
+			mensagem_resposta=tcp.recv(4194304) #Servidor proxy recebe resposta do servidor http
+			#print mensagem_resposta
+			if not mensagem_resposta: #Encerra conexao quando nao houver mais mensagens do servidor http
+				tcp.close()
+				break 
+
+			mensagem_resposta_sep=mensagem_resposta.split('\n')
+			tipo_http=mensagem_resposta_sep[0].split(' ')
+						
+			
+ 			try:
+ 				if (tipo_http[0].find('HTTP/1.1'))!=-1: #Verifica se o pacote possui cabecalho
+	 				if int(tipo_http[1])>=200 and int(tipo_http[1])<300: #Verifica se e um pacote de confirmacao (HTTP 2XX)
+	 					content_type=mensagem_resposta.find('Content-Type: text/html') #Encontra campo content-type para verificar se e texto ou imagens
+	 					
+						if content_type != -1: #Caso seja texto, verifica presenca de termos proibidos
+							print 'Verificando termos proibidos...'
+							for termo in denyterms:
+								flag_dt=str.find(mensagem_resposta,termo[len(termo)-1:]) #Procura no pacote termo proibido sem \n
+								if flag_dt!=-1:	
+									data = time.strftime("%b, %d, %Y, %H:%M:%S")
+									texto_log = '%s - acesso em %s - termo proibido encontrado, acesso negado\n' %(site, data)
+									arqlog(texto_log)
+									print '\nTERMO PROIBIDO ENCONTRADO!\n'
+									tcp.close()
+									break #Quebra loop 'for' de procura de termos proibidos
+							if flag_dt!=-1:
+								objeto.send(str.encode('HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body>Acesso Negado - Termos proibidos - WASTED</body></html>\n'))
+								objeto.close()
+								break #	Quebra loop 'lidacliente' caso tenha encontrado termos proibidos
+							print '\nTERMO PROIBIDO NAO ENCONTRADO! \n'
+							objeto.send(mensagem_resposta) #Envia resposta caso nao haja termo proibido
+
+						else: #Caso o pacote nao seja de texto, envia para o browser
+							objeto.send(mensagem_resposta)
+							
+					else: #Caso a mensagem resposta nao seja de confirmacao, manda a mensagem para o browser (proxy transparente)
+						objeto.send(mensagem_resposta)
+						break
+				else: #Caso nao tenha cabecalho, o pacote contem apenas dados que devem ter seus termos verificados
+					print 'Verificando termos proibidos...'
+					for termo in denyterms:
+						flag_dt=str.find(mensagem_resposta,termo[len(termo)-1:])
+						if flag_dt!=-1:	
+							tcp.close()
+							data = time.strftime("%b, %d, %Y, %H:%M:%S")
+							texto_log = '%s - acesso em %s - termo proibido encontrado, acesso negado\n' %(site, data)
+							arqlog(texto_log)
+							print '\nTERMO PROIBIDO ENCONTRADO!\n'
+							break
+					if flag_dt!=-1:
+						objeto.send(str.encode('HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body>Acesso Negado - Termos proibidos - WASTED</body></html>\n'))
+						objeto.close()
+						break
+					
+					print '\nTERMO PROIBIDO NAO ENCONTRADO! \n'					
+					objeto.send(mensagem_resposta)
+				
+
+ 			except Exception as IndexError:
+ 				pass		
+	       
+	        data = time.strftime("%b, %d, %Y, %H:%M:%S")
+                texto_log = '%s - acesso em %s - sem termos proibidos\n' %(site, data)
+                arqlog(texto_log)
+	objeto.close()
 
 				
 def arqlog(site):
